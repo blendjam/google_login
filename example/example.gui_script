@@ -1,0 +1,42 @@
+local function gsi_callback(self, message_id, message)
+	if message_id == gsi.MSG_SIGN_IN then
+		if message.status == gsi.STATUS_SUCCESS then
+			gui.set_text(self.status, "Logged In")
+			pprint("LOGGED Into Google: ", message.auth_token)
+		elseif message.status == gsi.STATUS_FAILED then
+			gui.set_text(self.status, "Unable to Login")
+			pprint("UNABLE TO LOGIN TO GSI", message.error)
+		end
+	elseif message_id == gsi.MSG_SIGN_OUT then
+		if message.status == gsi.STATUS_SUCCESS then
+			gui.set_text(self.status, "Logged Out")
+		end
+		pprint("SIGN OUT: ", message)
+	end
+end
+
+function init(self)
+	msg.post(".", "acquire_input_focus")
+	self.login_button = gui.get_node("login_button")
+	self.logout_button = gui.get_node("logout_button")
+	self.status = gui.get_node("status")
+	if gsi then 
+		gsi.set_callback(gsi_callback)
+	end
+end
+
+function on_input(self, action_id, action)
+	if action_id == hash("touch") and action.pressed then
+		if gui.pick_node(self.login_button, action.x, action.y) then
+			if gsi then
+				gui.set_text(self.status, "Logging In...")
+				gsi.login()
+			end
+		elseif gui.pick_node(self.logout_button, action.x, action.y) then
+			if gsi then
+				gui.set_text(self.status, "Logging Out...")
+				gsi.logout()
+			end
+		end
+	end
+end

@@ -1,0 +1,114 @@
+script: "/example/example.gui_script"
+fonts {
+  name: "default"
+  font: "/builtins/fonts/default.font"
+}
+nodes {
+  position {
+    x: 360.0
+    y: 640.0
+  }
+  size {
+    x: 720.0
+    y: 1280.0
+  }
+  type: TYPE_BOX
+  id: "root"
+  adjust_mode: ADJUST_MODE_STRETCH
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+  visible: false
+}
+nodes {
+  position {
+    y: 190.0
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    x: 0.0
+    y: 0.502
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "login_button"
+  parent: "root"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  scale {
+    x: 2.96
+    y: 2.96
+    z: 2.96
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  type: TYPE_TEXT
+  text: "Login"
+  font: "default"
+  id: "text"
+  parent: "login_button"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    y: -110.0
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "logout_button"
+  parent: "root"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  scale {
+    x: 2.96
+    y: 2.96
+    z: 2.96
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  type: TYPE_TEXT
+  text: "Logout"
+  font: "default"
+  id: "text1"
+  parent: "logout_button"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    y: 417.0
+  }
+  scale {
+    x: 3.472
+    y: 3.472
+    z: 3.472
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  type: TYPE_TEXT
+  text: "Press Login"
+  font: "default"
+  id: "status"
+  parent: "root"
+  inherit_alpha: true
+}
+material: "/builtins/materials/gui.material"
+adjust_reference: ADJUST_REFERENCE_PARENT

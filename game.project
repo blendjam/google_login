@@ -1,0 +1,30 @@
+[project]
+title = GSI
+publisher = blendjam
+developer = blendjam
+
+[bootstrap]
+main_collection = /example/example.collectionc
+
+[script]
+shared_state = 1
+
+[display]
+width = 720
+height = 1280
+
+[android]
+package = com.blendjam.gsi
+immersive_mode = 1
+minimum_sdk_version = 23
+target_sdk_version = 34
+
+[library]
+include_dirs = gsi
+
+[iname]
+bundle_name = com.blendjam.gsi
+
+[gsi]
+client_id = your_web_client_id 
+

@@ -1,0 +1,15 @@
+name: "gsi"
+
+platforms:
+    armv7-android:
+        context:
+            jetifier: true
+    arm64-android:
+        context:
+            jetifier: true
+    arm64-ios:
+        context:
+            linkFlags:  ["-ObjC"]
+    armv7-ios:
+        context:
+            linkFlags:  ["-ObjC"]
