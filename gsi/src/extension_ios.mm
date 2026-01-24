@@ -1,183 +1,117 @@
-#include <dmsdk/sdk.h>
+#if defined(DM_PLATFORM_IOS) 
 
-#if defined(DM_PLATFORM_IOS)
-
-#import <Foundation/Foundation.h>
-#import <UIKit/UIKit.h>
-#import <GoogleSignIn/GoogleSignIn.h>
-
+#include <GoogleSignIn/GoogleSignIn.h>
+#include <UiKit/UiKit.h>
 #include "extension.h"
 #include "gsi_callback.h"
 
-// -----------------------------------------------------------------------------
-// State
-// -----------------------------------------------------------------------------
+static NSString* g_serverAuthCode = nil;
 
-static lua_State* g_LuaState = 0;
-static dmScript::LuaCallbackInfo* g_Callback = 0;
-
-static NSString* g_ClientId = nil;
-static NSString* g_ServerAuthCode = nil;
-
-
-// -----------------------------------------------------------------------------
-// Utility
-// -----------------------------------------------------------------------------
-
-static void SendSimpleMessage(int msg, id obj) {
+void SendSimpleMessage(MESSAGE_ID msg, id obj) {
     NSError* error;
-    NSData* jsonData =
-        [NSJSONSerialization dataWithJSONObject:obj options:0 error:&error];
+    NSData* jsonData = [NSJSONSerialization dataWithJSONObject:obj options:(NSJSONWritingOptions)0 error:&error];
 
-    if (jsonData) {
-        NSString* str =
-            [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-        gsi_add_to_queue(msg, [str UTF8String]);
-        [str release];
-    } else {
-        NSMutableDictionary* dict = [NSMutableDictionary dictionary];
-        [dict setObject:error.localizedDescription ?: @"JSON error"
-                 forKey:@"error"];
-
-        NSData* errorData =
-            [NSJSONSerialization dataWithJSONObject:dict options:0 error:nil];
-
-        if (errorData) {
-            NSString* str =
-                [[NSString alloc] initWithData:errorData encoding:NSUTF8StringEncoding];
-            gsi_add_to_queue(msg, [str UTF8String]);
-            [str release];
-        } else {
-            gsi_add_to_queue(
-                msg,
-                "{ \"error\": \"Error while converting message to JSON\" }");
+    if (jsonData)
+    {
+        NSString* nsstring = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+        gsi_add_to_queue(msg, (const char*)[nsstring UTF8String]);
+        [nsstring release];
+    }
+    else
+    {
+        NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+        [dict setObject:error.localizedDescription forKey:@"error"];
+        NSError* error2;
+        NSData* errorJsonData = [NSJSONSerialization dataWithJSONObject:dict options:(NSJSONWritingOptions)0 error:&error2];
+        if (errorJsonData)
+        {
+            NSString* nsstringError = [[NSString alloc] initWithData:errorJsonData encoding:NSUTF8StringEncoding];
+            gsi_add_to_queue(MSG_ERROR, (const char*)[nsstringError UTF8String]);
+            [nsstringError release];
+        }
+        else
+        {
+            gsi_add_to_queue(MSG_ERROR, [[NSString stringWithFormat:@"{ \"error\": \"Error while converting simple message to JSON.\"}"] UTF8String]);
         }
     }
 }
 
-// -----------------------------------------------------------------------------
-// Lua API
-// -----------------------------------------------------------------------------
-
-int EXTENSION_SET_CALLBACK(lua_State* L) {
-    DM_LUA_STACK_CHECK(L, 0);
-
-    if (g_Callback) {
-        dmScript::DestroyCallback(g_Callback);
-        g_Callback = 0;
-    }
-
-    g_Callback = dmScript::CreateCallback(L, 1);
-
-    return 0;
+void SendSimpleMessage(MESSAGE_ID msg, NSString *key, id value) {
+    NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+    [dict setObject:value forKey:key];
+    SendSimpleMessage(msg, dict);
 }
 
+void SendSimpleMessage(MESSAGE_ID msg, NSString *key1, id value1, NSString *key2, id value2) {
+    NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+    [dict setObject:value1 forKey:key1]; 
+    [dict setObject:value2 forKey:key2];
+    SendSimpleMessage(msg, dict);
+}
+#pragma mark - Lua Functions -
 int EXTENSION_LOGIN(lua_State* L) {
-    if (!g_ClientId) {
-        NSMutableDictionary* dict = [NSMutableDictionary dictionary];
-        [dict setObject:@(STATUS_FAILED) forKey:@"status"];
-        [dict setObject:@"Client ID not set" forKey:@"error"];
-        SendSimpleMessage(MSG_SIGN_IN, dict);
-        return 0;
-    }
-
-    UIViewController* rootVC =
-        UIApplication.sharedApplication.keyWindow.rootViewController;
-
-    GIDConfiguration* config =
-        [[GIDConfiguration alloc] initWithClientID:g_ClientId];
-
-    [GIDSignIn.sharedInstance
-        signInWithConfiguration:config
-        presentingViewController:rootVC
-        callback:^(GIDGoogleUser* user, NSError* error) {
-
-        if (error) {
-            NSMutableDictionary* dict = [NSMutableDictionary dictionary];
-            [dict setObject:@(STATUS_FAILED) forKey:@"status"];
-            [dict setObject:error.localizedDescription ?: @"Unknown error"
-                     forKey:@"error"];
-            SendSimpleMessage(MSG_SIGN_IN, dict);
-            return;
-        }
-
-        if (g_ServerAuthCode) {
-            [g_ServerAuthCode release];
-            g_ServerAuthCode = nil;
-        }
-
-        g_ServerAuthCode = [user.idToken.tokenString copy];
-
-        NSMutableDictionary* dict = [NSMutableDictionary dictionary];
-        [dict setObject:@(STATUS_SUCCESS) forKey:@"status"];
-        [dict setObject:g_ServerAuthCode ?: @""
-                 forKey:@"auth_token"];
-
-        SendSimpleMessage(MSG_SIGN_IN, dict);
-    }];
-
-    [config release];
-    return 0;
-}
-
-int EXTENSION_LOGOUT(lua_State* L) {
-    [GIDSignIn.sharedInstance signOut];
-
-    if (g_ServerAuthCode) {
-        [g_ServerAuthCode release];
-        g_ServerAuthCode = nil;
-    }
-
-    NSMutableDictionary* dict = [NSMutableDictionary dictionary];
-    [dict setObject:@(STATUS_SUCCESS) forKey:@"status"];
-    SendSimpleMessage(MSG_SIGN_OUT, dict);
-
+    dmLogInfo("GSI: Login Started");
+    UIViewController *rootVC = [UIApplication sharedApplication].keyWindow.rootViewController;
+    [GIDSignIn.sharedInstance signInWithPresentingViewController:rootVC
+        completion:^(GIDSignInResult *_Nullable result, NSError *_Nullable error ){
+            if (error){
+                dmLogInfo("GSI: Unable to sign in");
+                SendSimpleMessage(MSG_SIGN_IN, @"status", @(STATUS_FAILED));
+                return;
+            }
+            [result.user refreshTokensIfNeededWithCompletion: ^(GIDGoogleUser * _Nullable user, NSError* _Nullable tokenError){
+                if (tokenError || user == nil){
+                    dmLogInfo("GSI: Unable to fetch user token");
+                    return;
+                }
+                g_serverAuthCode  = [user.idToken tokenString];
+                SendSimpleMessage(MSG_SIGN_IN, @"status", @(STATUS_SUCCESS), @"auth_token", g_serverAuthCode);
+            }];
+        }];
     return 0;
 }
 
 int EXTENSION_GET_SERVER_AUTH_CODE(lua_State* L) {
-    if (g_ServerAuthCode) {
-        lua_pushstring(L, [g_ServerAuthCode UTF8String]);
-    } else {
+    dmLogInfo("GSI: get server auth code");
+    
+    if (g_serverAuthCode == nil) {
+        dmLogInfo("GSI: No ID token stored - user might not be logged in");
         lua_pushnil(L);
+        return 1; 
     }
-    return 1;
+    
+    lua_pushstring(L, [g_serverAuthCode UTF8String]);
+    dmLogInfo("GSI: Returning stored ID token to Lua");
+    
+    return 1; 
 }
 
-// -----------------------------------------------------------------------------
-// Extension lifecycle
-// -----------------------------------------------------------------------------
+int EXTENSION_LOGOUT(lua_State* L) {
+    [GIDSignIn.sharedInstance signOut];
+    SendSimpleMessage(MSG_SIGN_OUT, @"status", @(STATUS_SUCCESS));
+    dmLogInfo("GSI: logout");
+    return 0;
+}
 
-void EXTENSION_INITIALIZE(lua_State* L, const char* client_id) {
-    g_LuaState = L;
-
-    if (g_ClientId) {
-        [g_ClientId release];
+#pragma mark - Defold lifecycle -
+void EXTENSION_INITIALIZE(lua_State* L, const char* ios_client_id) {
+    if (ios_client_id){
+        NSString *clientId = [NSString stringWithUTF8String:ios_client_id];
+        GIDConfiguration *config = [[GIDConfiguration alloc] initWithClientID:clientId];
+        GIDSignIn.sharedInstance.configuration = config;
     }
-    g_ClientId = [[NSString alloc] initWithUTF8String:client_id];
 }
 
 void EXTENSION_UPDATE(lua_State* L) {
-    gsi_callback_update();
 }
-void EXTENSION_APP_ACTIVATE(lua_State* L) {}
-void EXTENSION_APP_DEACTIVATE(lua_State* L) {}
+
+void EXTENSION_APP_ACTIVATE(lua_State* L) {
+}
+
+void EXTENSION_APP_DEACTIVATE(lua_State* L) {
+}
 
 void EXTENSION_FINALIZE(lua_State* L) {
-    if (g_Callback) {
-        dmScript::DestroyCallback(g_Callback);
-        g_Callback = 0;
-    }
-
-    if (g_ClientId) {
-        [g_ClientId release];
-        g_ClientId = nil;
-    }
-
-    if (g_ServerAuthCode) {
-        [g_ServerAuthCode release];
-        g_ServerAuthCode = nil;
-    }
 }
 
-#endif // DM_PLATFORM_IOS
+#endif

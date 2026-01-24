@@ -27,6 +27,7 @@ static void LuaInit(lua_State* L)
 
     SETCONSTANT(MSG_SIGN_IN)
     SETCONSTANT(MSG_SIGN_OUT)
+    SETCONSTANT(MSG_ERROR)
 
     SETCONSTANT(STATUS_SUCCESS)
     SETCONSTANT(STATUS_FAILED)
@@ -45,7 +46,10 @@ dmExtension::Result APP_FINALIZE(dmExtension::AppParams* params) {
 
 dmExtension::Result INITIALIZE(dmExtension::Params* params) {
     LuaInit(params->m_L);
-    const char* client_id = dmConfigFile::GetString(params->m_ConfigFile, "gsi.client_id", 0);
+    const char* client_id = dmConfigFile::GetString(params->m_ConfigFile, "gsi.web_client_id", 0);
+    #if defined(DM_PLATFORM_IOS)
+        client_id = dmConfigFile::GetString(params->m_ConfigFile, "gsi.ios_client_id", 0);
+    #endif
     gsi_callback_initialize();
     EXTENSION_INITIALIZE(params->m_L, client_id);
     return dmExtension::RESULT_OK;

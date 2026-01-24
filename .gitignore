@@ -13,3 +13,4 @@ builtins
 /.vscode
 /debugger
 .idea
+embedded.mobileprovision

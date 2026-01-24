@@ -1,15 +1,10 @@
 name: "gsi"
 
 platforms:
-    armv7-android:
+    ios:
+        context:
+            frameworks: ["Foundation", "UIKit"]
+            linkFlags:  ['-ObjC', '-Wl,-rpath,@executable_path/Frameworks']
+    android:
         context:
             jetifier: true
-    arm64-android:
-        context:
-            jetifier: true
-    arm64-ios:
-        context:
-            linkFlags:  ["-ObjC"]
-    armv7-ios:
-        context:
-            linkFlags:  ["-ObjC"]

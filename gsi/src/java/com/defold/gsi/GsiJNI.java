@@ -25,17 +25,17 @@ public class GsiJNI {
     private static final int STATUS_FAILED = 2;
     
     private Activity activity;
-    private String clientId;
+    private String webClientId;
 
     // gsi results
     private String mServerAuthCode; 
 
     public static native void gsiAddToQueue(int msg, String json);
 
-    public GsiJNI(Activity activity, String clientId)
+    public GsiJNI(Activity activity, String webClientId)
    {
         this.activity = activity;
-        this.clientId = clientId;
+        this.webClientId = webClientId;
    }
 
     private void sendSimpleMessage(int msg, Object... keyValues) {
@@ -63,7 +63,7 @@ public class GsiJNI {
     public void login() {
         CredentialManager credentialManager = CredentialManager.create(activity);
         
-        GetSignInWithGoogleOption signInWithGoogleOption = new GetSignInWithGoogleOption.Builder(clientId).build();
+        GetSignInWithGoogleOption signInWithGoogleOption = new GetSignInWithGoogleOption.Builder(webClientId).build();
         
         GetCredentialRequest request = new GetCredentialRequest.Builder()
                 .addCredentialOption(signInWithGoogleOption)

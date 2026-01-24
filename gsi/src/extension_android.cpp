@@ -101,7 +101,7 @@ int EXTENSION_GET_SERVER_AUTH_CODE(lua_State* L) {
 
 
 // EXTENSION Life Cycle Methods
-void EXTENSION_INITIALIZE(lua_State* L, const char* client_id) {
+void EXTENSION_INITIALIZE(lua_State* L, const char* web_client_id) {
     dmAndroid::ThreadAttacher threadAttacher;
     JNIEnv* env = threadAttacher.GetEnv();
     jclass cls = dmAndroid::LoadClass(env, "com.defold.gsi.GsiJNI");
@@ -109,9 +109,9 @@ void EXTENSION_INITIALIZE(lua_State* L, const char* client_id) {
     InitJNIMethods(env, cls);
 
     jmethodID jni_constructor = env->GetMethodID(cls, "<init>", "(Landroid/app/Activity;Ljava/lang/String;)V");
-    jstring java_client_id = env->NewStringUTF(client_id);
-    g_gsi.m_GsiJNI = env->NewGlobalRef(env->NewObject(cls, jni_constructor, threadAttacher.GetActivity()->clazz, java_client_id));
-    env->DeleteLocalRef(java_client_id);
+    jstring java_web_client_id = env->NewStringUTF(web_client_id);
+    g_gsi.m_GsiJNI = env->NewGlobalRef(env->NewObject(cls, jni_constructor, threadAttacher.GetActivity()->clazz, java_web_client_id));
+    env->DeleteLocalRef(java_web_client_id);
 }
 
 void EXTENSION_UPDATE(lua_State* L) {}

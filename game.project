@@ -26,5 +26,11 @@ include_dirs = gsi
 bundle_name = com.blendjam.gsi
 
 [gsi]
-client_id = your_web_client_id 
+web_client_id = your_web_client_id 
+ios_client_id = your_ios_client_id 
+ios_reversed_client_id = ios_client_id_reversed 
+
+[ios]
+bundle_identifier = com.blendjam.gsi 
+bundle_name = GSI
 

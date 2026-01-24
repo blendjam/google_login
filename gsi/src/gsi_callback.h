@@ -4,6 +4,7 @@
 
 enum MESSAGE_ID
 {
+    MSG_ERROR = 0,
     MSG_SIGN_IN = 1,
     MSG_SIGN_OUT = 2,
 };

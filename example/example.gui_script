@@ -12,6 +12,8 @@ local function gsi_callback(self, message_id, message)
 			gui.set_text(self.status, "Logged Out")
 		end
 		pprint("SIGN OUT: ", message)
+	elseif message_id == gsi.MSG_ERROR then
+		pprint("ERROR OCCURED", message)
 	end
 end
 
