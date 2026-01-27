@@ -17,7 +17,7 @@ int EXTENSION_LOGOUT(lua_State* L) {
     return 0;
 }
 
-void EXTENSION_INITIALIZE(lua_State* L, const *client_id) {
+void EXTENSION_INITIALIZE(lua_State* L, const char *client_id) {
     dmLogInfo("GSI: initialized (stub)");
 }
 
